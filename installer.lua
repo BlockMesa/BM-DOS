@@ -1,4 +1,4 @@
-local baseUrl = "https://raw.githubusercontent.com/BlockMesa/MISC/master/BM-DOS/"
+local baseUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/master/"
 print("Installing BM-DOS")
 shell.run("wget "..baseUrl.."startup.lua")
 
