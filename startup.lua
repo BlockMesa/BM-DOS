@@ -21,15 +21,15 @@ if not settings.get("dos.hasFinishedSetup") then
 	os.reboot()
 end
 local function boot()
-	if not fs.exists("disk") and not fs.exists("/disk/.BOOT") then
-		print("NO BOOT DEVICE FOUND!")
-		while true do os.sleep() end
-	else
+	if fs.exists("disk") and fs.exists("/disk/.BOOT") then
 		local success, response = pcall(os.run,{['shell']=shell},"/disk/.BOOT")
 		if not success then
 			print(response)
 			while true do os.sleep() end
 		end
+	else
+		print("NO BOOT DEVICE FOUND!")
+		while true do os.sleep() end
 	end
 end
 local oldErr = printError
