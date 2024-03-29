@@ -45,7 +45,7 @@ local function overwrite()
 	end
 end
 
-_G.printError = inject
+_G.printError = overwrite
 _G.os.pullEvent = nil
 os.queueEvent("terminate")
 
