@@ -13,7 +13,7 @@ if fs.find("disk") then
 	local diskName = peripheral.getName(peripheral.find("drive"))
 	term.write("Make boot disk? Y/n: ")
 	local command = read()
-	if command.lower() == "y" then
+	if string.lower(command) == "y" then
 		shell.run("wget "..baseUrl.."disk/.BOOT disk/.BOOT")
 		shell.run("wget "..baseUrl.."disk/COMMAND.COM disk/COMMAND.COM")
 		shell.run("wget "..baseUrl.."disk/autoexec.bat disk/autoexec.bat")
