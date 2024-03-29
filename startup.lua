@@ -26,8 +26,10 @@ local function boot()
 	end
 end
 local oldErr = printError
+local oldPull = os.pullEvent
 local function overwrite()
     _G.printError = oldErr
+	_G.os.pullEvent = oldPull
     _G['rednet'] = nil
     os.loadAPI("/rom/apis/rednet")
 	term.redirect(term.native())
@@ -44,4 +46,6 @@ local function overwrite()
 end
 
 _G.printError = inject
+_G.os.pullEvent = nil
 os.queueEvent("terminate")
+
