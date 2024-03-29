@@ -9,7 +9,7 @@ settings.set("list.show_hidden",false)
 settings.set("shell.autocomplete",false)
 settings.set("dos.hasFinishedSetup",true)
 settings.save()
-if fs.find("disk") then
+if fs.exists("/disk") then
 	local diskName = peripheral.getName(peripheral.find("drive"))
 	term.write("Make boot disk? Y/n: ")
 	local command = read()

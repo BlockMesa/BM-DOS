@@ -1,8 +1,15 @@
 --inject code stolen from https://pastebin.com/yzfDMjwf
 os.pullEvent = os.pullEventRaw
-term.redirect(term.native())
-term.clear()
-local oldShell = _G.shell
+local function setupTerm()
+	term.redirect(term.native())
+	term.setPaletteColour(colors.white, 0xE9A226)
+	term.setPaletteColour(colors.red, 0xE9A226)
+	term.setPaletteColour(colors.black, 0x43422C)
+	term.setCursorBlink(false)
+	term.clear()
+	term.setCursorPos(1,1)
+end
+setupTerm()
 if not settings.get("dos.hasFinishedSetup") then
 	settings.set("bios.use_multishell",false)
 	settings.set("shell.allow_disk_startup",false)
@@ -14,11 +21,11 @@ if not settings.get("dos.hasFinishedSetup") then
 	os.reboot()
 end
 local function boot()
-	if not fs.find("disk") and not fs.find("/disk/.BOOT") then
+	if not fs.exists("disk") and not fs.exists("/disk/.BOOT") then
 		print("NO BOOT DEVICE FOUND!")
 		while true do os.sleep() end
 	else
-		local success, response = pcall(os.run,{['shell']=oldShell},"/disk/command.com")
+		local success, response = pcall(os.run,{['shell']=shell},"/disk/.BOOT")
 		if not success then
 			print(response)
 			while true do os.sleep() end
@@ -31,13 +38,10 @@ local function overwrite()
     _G.printError = oldErr
 	_G.os.pullEvent = oldPull
     _G['rednet'] = nil
-    os.loadAPI("/rom/apis/rednet")
-	term.redirect(term.native())
-	term.setPaletteColour(colors.white, 0xE9A226)
-	term.setPaletteColour(colors.black, 0x43422C)
-	term.clear()
-	term.setCursorPos(1,1)
-	local success, err = parallel.waitForAny(boot, rednet.run)
+    --os.loadAPI("/rom/apis/rednet.lua")
+	setupTerm()
+	--local success, err = pcall(parallel.waitForAny, boot, rednet.run)
+	local success, err = pcall(boot)
 	if not success then
 		print(err)
 		print("Press any key to continue.")
@@ -47,5 +51,5 @@ end
 
 _G.printError = overwrite
 _G.os.pullEvent = nil
-os.queueEvent("terminate")
+--os.queueEvent("key")
 

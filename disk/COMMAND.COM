@@ -1,19 +1,26 @@
+local version = "1.00"
 term.clear()
 term.setCursorPos(1,1)
-term.write("BM-DOS version 1.00")
+term.write("BM-DOS version "..version)
 term.setCursorPos(1,3)
 
 --modify the env
 _G.os.version = function() return "BM-DOS version 1.00" end
-_G.shell.setDir = function(...) return end
-_G.shell.openTab = nil
-_G.shell.switchTab = nil
-
+shell.setDir = function(...) return end
+shell.openTab = nil
+shell.switchTab = nil
+local fakeApis = {
+	dos = {
+		version = function() return version end,
+		isSentient = function() return true end,
+	}
+}
 local path = "/disk/"
 local romPrograms = {
 	edit = "/rom/programs/edit.lua",
 	pastebin = "/rom/programs/http/pastebin.lua",
-	wget = "/rom/programs/http/wget.lua"
+	wget = "/rom/programs/http/wget.lua",
+	--lua = "/rom/programs/lua.lua", --doesnt work for some fucking reason
 }
 local programFunctions = {
 	dir = function(...)
@@ -23,6 +30,14 @@ local programFunctions = {
 	end,
 	rem = function(...) end,
 	pause = function(...) print("Press any key to continue.") os.pullEvent("key") end,
+	loadapi = function(name)
+		local file = path..name
+		if fs.exists(file) then
+			os.loadAPI(file)
+		else
+			print("FILE NOT FOUND")
+		end
+	end,
 	type = function(file)
 		local file = path..file
 		local data = fs.open(file,"r")
@@ -38,6 +53,15 @@ local programFunctions = {
 		else
 			print("FILE NOT FOUND")
 		end
+	end,
+	echo = function(...)
+		print(...)
+	end,
+	shutdown = function(...)
+		os.shutdown()
+	end,
+	reboot = function(...)
+		os.reboot()
 	end,
 	rename = function(file,destination) --also works as move lol
 		local file = path..file
@@ -65,9 +89,12 @@ local programFunctions = {
 		print("    HELP: Displays this message")
 	end
 }
-function splitString(str)
+function splitString(str,toMatch)
+	if not toMatch then
+		toMatch = "%S"
+	end
 	local words = {}
-	for w in str:gmatch("%S+") do
+	for w in str:gmatch(toMatch.."+") do
 		table.insert(words,w)
 	end
 	return words
@@ -81,34 +108,55 @@ local function removeFirstIndex(t)
 	end
 	return newTable
 end
+local runBatch = nil
 local function interpret(command)
 	local command = string.lower(command)
 	if command == "" then return end
 	local program = ""
-	local splitcommand = splitString(command)
+	local splitcommand = splitString(command,"%S")
 	local args = removeFirstIndex(splitcommand)
+	local name = splitString(splitcommand[1],"%P")
 	if romPrograms[splitcommand[1]] then
 		program = romPrograms[splitcommand[1]]
 	elseif programFunctions[splitcommand[1]] then
 		programFunctions[splitcommand[1]](table.unpack(args))
 		return
-	else
+	elseif name[2] == "bat" then
+		runBatch(splitcommand[1])
+		return
+	elseif name[2] or not fs.exists(path..splitcommand[1]..".lua") then
 		program = path..splitcommand[1]
+	else
+		program = path..splitcommand[1]..".lua"
 	end
-	local args1 = args
-	args1[0] = splitcommand[1]
-	local success, response = pcall(os.run,{['shell']=shell,arg=args1},program,table.unpack(args))
-	if not success then
+	if fs.exists(program) then
+		local args1 = args
+		args1[0] = splitcommand[1]
+		local fakeGlobals = {shell=shell,arg=args1}
+		for i,v in pairs(fakeApis) do
+			fakeGlobals[i] = v
+		end
+		local success, response = pcall(os.run,fakeGlobals,program,table.unpack(args))
+		if not success then
+			print("Illegal command: "..command..".")
+		end
+	else
 		print("Illegal command: "..command..".")
+	end
+end
+function runBatch(batchFile)
+	if fs.exists(batchFile) then
+		for line in io.lines(batchFile) do
+			interpret(line)
+		end
 	end
 end
 pcall(function()
 	if fs.exists("autoexec.bat") then
-		for line in io.lines("autoexec.bat") do
-			interpret(line)
-		end
+		runBatch("autoexec.bat")
 	end
 end)
+term.setCursorBlink(true)
 while true do
 	term.setTextColor(colors.white)
 	term.write("A> ")

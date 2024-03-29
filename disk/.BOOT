@@ -1,3 +1,6 @@
+--hidden programs stuff originally by someone else
+--i forget who originally made it and i cant find the post, sorry :(
+
 -- #### Preperation
 term.clear()
 term.setCursorPos(1,1)
@@ -91,13 +94,9 @@ _G.fs.list = fakeList
 
 real.exists = fs.exists
 local function fakeExists(path)
-	if string.lower(path) == "startup" then
-		path = userStartupPath
-	end
 	if shouldBeHidden(path) == true then
 		return nil
 	end
-	
 	return real.exists(path)
 end
 _G.fs.exists = fakeExists
@@ -119,7 +118,7 @@ real.makeDir = fs.makeDir
 
 real.delete = fs.delete
 _G.fs.makeDir = function(...) return end
-_G.fs.isDir = function(...) return false end
+--_G.fs.isDir = function(...) return false end
 
 local function fakeDelete(path)
 	if shouldBeHidden(path) == true then
@@ -189,17 +188,25 @@ local function fakeCopy(fromPath, toPath)
 end
 _G.fs.copy = fakeCopy
 
+_G.table.shallow_copy = function(t) --https://stackoverflow.com/a/641993
+  local t2 = {}
+  for k,v in pairs(t) do
+    t2[k] = v
+  end
+  return t2
+end
+
 --modify the env
 shell.setDir("/disk/")
-_G.shell.setDir = function(...) return end
-_G.shell.openTab = nil
-_G.shell.switchTab = nil
-_G.multishell = nil
+shell.setDir = function(...) return end
+shell.dir = function(...) return "/" end
+shell.openTab = nil
+shell.switchTab = nil
 
 
 
-if real.exists("/disk/command.com") then
-	local success, response = pcall(os.run,{['shell']=shell},"/disk/command.com")
+if real.exists("/disk/COMMAND.COM") then
+	local success, response = pcall(os.run,{['shell']=shell},"/disk/COMMAND.COM")
 	if not success then
 		while true do os.sleep() end
 	end
