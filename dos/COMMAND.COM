@@ -178,7 +178,7 @@ end)
 term.setCursorBlink(true)
 while true do
 	term.setTextColor(colors.white)
-	term.write(bios.getDrive()..":\>")
+	term.write(bios.getDrive()..":") --DOS 1.25 used a ":" not a "\>"
 	local command = read()
 	local success, err = pcall(interpret,command)
 	if not success then

@@ -198,7 +198,7 @@ if real.exists(bios.getBootedDrive().."COMMAND.COM") then
 else
 	while true do
 		print("Bad or missing Command Interpretor\nEnter correct name of Command Interpreter (eg, /COMMAND.COM)")
-		term.write("A> ")
+		term.write(bios.getDrive().."> ")
 		local thing = read()
 		local success, response = pcall(os.run,{['shell']=shell},thing)
 	end
