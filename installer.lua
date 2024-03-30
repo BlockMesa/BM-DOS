@@ -29,7 +29,7 @@ if fs.exists("/disk") then
 end
 
 for s=3,1,-1 do
-	print(("Rebooting in %d seconds"):format(s)
+	print(("Rebooting in %d seconds"):format(s))
 	sleep(1)
 end
 print("Rebooting!")
