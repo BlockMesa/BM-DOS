@@ -19,6 +19,8 @@ local function setColors()
 	term.setPaletteColour(colors.yellow, whiteColor)
 	term.setPaletteColour(colors.orange, whiteColor)
 	term.setPaletteColour(colors.black, blackColor)
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
 end
 local function setupTerm()
 	term.redirect(term.native())
