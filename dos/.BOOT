@@ -116,6 +116,15 @@ _G.io.open = fakeIoOpen
 real.makeDir = fs.makeDir
 
 real.delete = fs.delete
+local fakeDelete = function(path)
+	if shouldBeHidden(path) == true then
+		return nil
+	end
+	if string.lower(path) == "command.com" then
+		return nil
+	end	
+	return real.delete(path)
+end
 _G.fs.makeDir = function(...) return end
 --_G.fs.isDir = function(...) return false end
 
@@ -172,14 +181,6 @@ local function fakeCopy(fromPath, toPath)
 	return real.copy(fromPath, toPath)
 end
 _G.fs.copy = fakeCopy
-
-_G.table.shallow_copy = function(t) --https://stackoverflow.com/a/641993
-  local t2 = {}
-  for k,v in pairs(t) do
-    t2[k] = v
-  end
-  return t2
-end
 
 --modify the env
 shell.setDir(path)

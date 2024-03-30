@@ -3,7 +3,7 @@
 --inject code stolen from https://pastebin.com/yzfDMjwf
 os.pullEvent = os.pullEventRaw
 --internal flag things
-local version = "1.00"
+local version = "1.10"
 local isDiskBooted = false
 local baseDirectory = ""
 local directory = "/"
@@ -27,6 +27,7 @@ if not settings.get("dos.hasFinishedSetup") then
 	print("Rebooting...")
 	os.reboot()
 end
+local ioOpen = fs.open
 _G.bios = {
 	getBootedDrive = function()
 		return baseDirectory
@@ -48,8 +49,13 @@ _G.bios = {
 		driveLetter = a
 	end,
 	updateFile = function(file,url)
-		a = http.get(url,nil,true)
-		a1 = io.open(file,"wb")
+		--a = http.get(url	)
+		a, b, c = http.get {url = url, binary = true}
+		if not a then
+			print(b)
+			return
+		end
+		a1 = ioOpen(file,"wb")
 		a1.write(a.readAll())
 		a1.close()
 		a.close()

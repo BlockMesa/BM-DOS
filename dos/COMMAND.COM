@@ -1,4 +1,4 @@
-local version = "1.10"
+local version = "1.25"
 term.clear()
 term.setCursorPos(1,1)
 term.write("BM-DOS version "..version)
@@ -131,7 +131,7 @@ local function interpret(command)
 		programFunctions[string.lower(splitcommand[1])](table.unpack(args))
 		return
 	elseif name[2] == "bat" then
-		runBatch(splitcommand[1])
+		runBatch(bios.getDir()..splitcommand[1])
 		return
 	elseif name[2] or not fs.exists(bios.getDir()..splitcommand[1]..".lua") then
 		program = bios.getDir()..splitcommand[1]
@@ -170,8 +170,9 @@ while true do
 	term.setTextColor(colors.white)
 	term.write(bios.getDrive()..":")
 	local command = read()
-	local success, _ = pcall(interpret,command)
+	local success, err = pcall(interpret,command)
 	if not success then
+		--print(err)
 		print("Illegal command: "..command..".")
 	end
 end
