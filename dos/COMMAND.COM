@@ -94,6 +94,9 @@ local programFunctions = {
 		bios.setDir("/")
 		bios.setDrive("C")
 	end
+	["update-file"] = function(file,url)
+		bios.updateFile(file,url)
+	end
 }
 function splitString(str,toMatch)
 	if not toMatch then

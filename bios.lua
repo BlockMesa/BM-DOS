@@ -46,6 +46,13 @@ _G.bios = {
 	end,
 	setDrive = function(a)
 		driveLetter = a
+	end,
+	updateFile = function(file,url)
+		a = http.get(url,nil,true)
+		a1 = io.open(file,"wb")
+		a1.write(a.readAll())
+		a1.close()
+		a.close()
 	end
 }
 local function boot(prefix)

@@ -4,12 +4,7 @@ echo BM-DOS UPDATER!
 echo This does NOT update bootdisks!
 echo To update those, run bootdisk.bat!
 pause
-erase .BOOT
-erase COMMAND.COM
-rem erase autoexec.bat
-erase startup.lua
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/bios.lua startup.lua
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/.BOOT .BOOT
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/COMMAND.COM COMMAND.COM
-rem wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/autoexec.bat autoexec.bat
+update-file https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/bios.lua startup.lua
+update-file https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/.BOOT .BOOT
+update-file https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/COMMAND.COM COMMAND.COM
 reboot
