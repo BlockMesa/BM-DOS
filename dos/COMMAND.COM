@@ -90,6 +90,10 @@ local programFunctions = {
 		bios.setDir("/disk/")
 		bios.setDrive("A")
 	end,
+	["b:"] = function()
+		bios.setDir("/disk2/")
+		bios.setDrive("B")
+	end,
 	["c:"] = function()
 		bios.setDir("/")
 		bios.setDrive("C")
