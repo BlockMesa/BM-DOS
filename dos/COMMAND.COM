@@ -220,7 +220,7 @@ fakeApis = {
 		run = function(...)
 			local args = {...}
 			local command = ""
-			for i,v in args do
+			for i,v in pairs(args) do
 				if type(v) == "string" then
 					if i ~= 1 then
 						command = command.." "
