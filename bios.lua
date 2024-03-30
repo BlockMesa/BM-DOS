@@ -39,7 +39,7 @@ if not settings.get("dos.hasFinishedSetup") then
 	print("Rebooting...")
 	os.reboot()
 end
-local ioOpen = fs.open
+local fsOpen = fs.open --it's not using io :skull:
 _G.bios = {
 	getBootedDrive = function()
 		return baseDirectory
@@ -61,16 +61,16 @@ _G.bios = {
 		driveLetter = a
 	end,
 	updateFile = function(file,url)
-		--a = http.get(url	)
-		a, b, c = http.get {url = url, binary = true}
-		if not a then
-			print(b)
+		--a = http.get(url)
+		local result, reason = http.get({url = url, binary = true}) --make names better
+		if not result then
+			print(("Failed to update %s from %s (%s)"):format(file, url, reason)) --include more detail
 			return
 		end
-		a1 = ioOpen(file,"wb")
-		a1.write(a.readAll())
+		a1 = fsOpen(file,"wb")
+		a1.write(result.readAll())
 		a1.close()
-		a.close()
+		result.close()
 	end,
 	fixColorScheme = setColors
 }
@@ -99,13 +99,13 @@ local function findBootableDevice()
 	end
 end
 local oldErr = printError
-local oldPull = os.pullEvent
+--local oldPull = os.pullEvent --has already been defined earlier
 local function overwrite()
     _G.printError = oldErr
-	_G.os.pullEvent = oldPull
+    _G.os.pullEvent = oldPull
     _G['rednet'] = nil
     --os.loadAPI("/rom/apis/rednet.lua")
-	setupTerm()
+    setupTerm()
 	--local success, err = pcall(parallel.waitForAny, boot, rednet.run)
 	local success, err = pcall(findBootableDevice)
 	if not success then
