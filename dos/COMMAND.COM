@@ -22,8 +22,11 @@ local romPrograms = {
 }
 local programFunctions = {
 	dir = function(...)
+               
 		for i,v in pairs(fs.list(bios.getDir())) do
-			print("    "..v)
+			if string.sub(v, 1, 1) ~= "." then
+				print("    "..v)
+			end
 		end
 	end,
 	rem = function(...) end,
