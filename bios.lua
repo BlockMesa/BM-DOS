@@ -10,11 +10,19 @@ local isDiskBooted = false
 local baseDirectory = ""
 local directory = "/"
 local driveLetter = "C"
+
+local whiteColor = 0xE9A226
+local blackColor = 0x43422C
+local function setColors()
+	term.setPaletteColour(colors.white, whiteColor)
+	term.setPaletteColour(colors.red, whiteColor)
+	term.setPaletteColour(colors.yellow, whiteColor)
+	term.setPaletteColour(colors.orange, whiteColor)
+	term.setPaletteColour(colors.black, blackColor)
+end
 local function setupTerm()
 	term.redirect(term.native())
-	term.setPaletteColour(colors.white, 0xE9A226)
-	term.setPaletteColour(colors.red, 0xE9A226)
-	term.setPaletteColour(colors.black, 0x43422C)
+	setColors()
 	term.setCursorBlink(false)
 	term.clear()
 	term.setCursorPos(1,1)
@@ -61,7 +69,8 @@ _G.bios = {
 		a1.write(a.readAll())
 		a1.close()
 		a.close()
-	end
+	end,
+	fixColorScheme = setColors
 }
 local function boot(prefix)
 	print("Booting from drive "..driveLetter)

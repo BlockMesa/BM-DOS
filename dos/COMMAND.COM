@@ -147,6 +147,7 @@ local function interpret(command)
 		end
 		_G.os.pullEvent = os.pullEventOld
 		local success, response = pcall(os.run,fakeGlobals,program,table.unpack(args))
+		bios.fixColorScheme()
 		_G.os.pullEvent = os.pullEventRaw
 		if not success then
 			print("Illegal command: "..command..".")
