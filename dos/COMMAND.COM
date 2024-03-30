@@ -116,16 +116,16 @@ local function removeFirstIndex(t)
 end
 local runBatch = nil
 local function interpret(command)
-	local command = string.lower(command)
+	--local command = string.lower(command)
 	if command == "" then return end
 	local program = ""
 	local splitcommand = splitString(command,"%S")
 	local args = removeFirstIndex(splitcommand)
 	local name = splitString(splitcommand[1],"%P")
-	if romPrograms[splitcommand[1]] then
-		program = romPrograms[splitcommand[1]]
-	elseif programFunctions[splitcommand[1]] then
-		programFunctions[splitcommand[1]](table.unpack(args))
+	if romPrograms[string.lower(splitcommand[1])] then
+		program = romPrograms[string.lower(splitcommand[1])]
+	elseif programFunctions[string.lower(splitcommand[1])] then
+		programFunctions[string.lower(splitcommand[1])](table.unpack(args))
 		return
 	elseif name[2] == "bat" then
 		runBatch(splitcommand[1])
