@@ -11,5 +11,5 @@ erase startup.lua
 wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/bios.lua startup.lua
 wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/.BOOT .BOOT
 wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/COMMAND.COM COMMAND.COM
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/autoexec.bat autoexec.bat
+rem wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/autoexec.bat autoexec.bat
 reboot
