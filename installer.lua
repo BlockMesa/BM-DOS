@@ -28,11 +28,9 @@ if fs.exists("/disk") then
 	end
 end
 
-print("Rebooting in 3 seconds!")
-sleep(1)
-print("Rebooting in 2 seconds!")
-sleep(1)
-print("Rebooting in 1 seconds!")
-sleep(1)
+for s=3,1,-1 do
+	print(("Rebooting in %d seconds"):format(s)
+	sleep(1)
+end
 print("Rebooting!")
 os.reboot()
