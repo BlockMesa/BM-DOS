@@ -119,13 +119,6 @@ real.delete = fs.delete
 _G.fs.makeDir = function(...) return end
 --_G.fs.isDir = function(...) return false end
 
-local function fakeDelete(path)
-	if string.lower(path) == "command.com" then
-		return nil
-	end	
-	return real.delete(path)
-end
-_G.fs.delete = fakeDelete
 
 real.open = fs.open
 local function fakeOpen(path, mode)
