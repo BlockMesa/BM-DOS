@@ -5,19 +5,21 @@ local oldPull = os.pullEvent
 _G.os.pullEvent = os.pullEventRaw
 _G.os.pullEventOld = oldPull
 --internal flag things
-local version = "1.10"
+local version = "1.20"
 local isDiskBooted = false
 local baseDirectory = ""
 local directory = "/"
 local driveLetter = "C"
 
-local whiteColor = 0xE9A226
-local blackColor = 0x43422C
+local whiteColor = 0x00FF00
+local blackColor = 0x000000
 local function setColors()
 	term.setPaletteColour(colors.white, whiteColor)
 	term.setPaletteColour(colors.red, whiteColor)
 	term.setPaletteColour(colors.yellow, whiteColor)
 	term.setPaletteColour(colors.orange, whiteColor)
+	term.setPaletteColour(colors.lime, whiteColor)
+	term.setPaletteColour(colors.green, whiteColor)
 	term.setPaletteColour(colors.black, blackColor)
 	term.setBackgroundColor(colors.black)
 	term.setTextColor(colors.white)
@@ -51,7 +53,7 @@ _G.bios = {
 		return directory
 	end,
 	setDir = function(dir)
-		shell.setDir(dir)
+		--shell.setDir(dir)
 		directory = dir
 	end,
 	getDrive = function()
@@ -72,13 +74,13 @@ _G.bios = {
 		a1.close()
 		result.close()
 	end,
-	fixColorScheme = setColors
+	fixColorScheme = setColors,
 }
 local function boot(prefix)
 	print("Booting from drive "..driveLetter)
 	baseDirectory = prefix
 	directory = prefix
-	local success, response = pcall(os.run,{['shell']=shell},prefix..".BOOT")
+	local success, response = pcall(os.run,{},prefix..".BOOT")
 	if not success then
 		print(response)
 		while true do os.sleep() end

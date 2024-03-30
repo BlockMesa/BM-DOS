@@ -1,3 +1,3 @@
-# BM-DOS - Really bad MS-DOS 1.25 recreation
+# BM-DOS - Really bad MS-DOS 3.30 recreation
 
-Before you say anything is inaccurate, please check if it was like that in MS-DOS 1.25
+Before you say anything is inaccurate, please check if it was like that in MS-DOS 3.30

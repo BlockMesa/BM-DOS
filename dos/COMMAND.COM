@@ -1,31 +1,71 @@
-local version = "1.25"
+local version = "3.30"
+local versionString = "BM-DOS version "..version
 term.clear()
 term.setCursorPos(1,1)
-term.write("BM-DOS version "..version)
+term.write(versionString)
 term.setCursorPos(1,3)
 
 --modify the env
-_G.os.version = function() return "BM-DOS version "..version end
-shell.setDir = function(...) return end
-shell.openTab = nil
-shell.switchTab = nil
-local fakeApis = {
-	dos = {
-		version = function() return version end,
-		isSentient = function() return true end,
-	}
-}
+_G.os.version = function() return versionString end
+
 local romPrograms = {
 	edit = "/rom/programs/edit.lua",
 	pastebin = "/rom/programs/http/pastebin.lua",
 	wget = "/rom/programs/http/wget.lua"
 }
+local help = {
+	"DIR: Lists files in directory",
+	"CD: Changes directory",
+	"MKDIR: creates directory",
+	"TYPE: Outputs contents of a file",
+	"COPY: Duplicates a file",
+	"RENAME: Renames a file",
+	"ERASE: Deletes a file",
+	"HELP: Displays this message",
+}
+local function splitString(str,toMatch)
+	if not toMatch then
+		toMatch = "%S"
+	end
+	local words = {}
+	for w in str:gmatch(toMatch.."+") do
+		table.insert(words,w)
+	end
+	return words
+end
+local function removeFirstIndex(t)
+	local newTable = {}
+	for i,v in pairs(t) do
+		if i ~= 1 then
+			table.insert(newTable,v)
+		end
+	end
+	return newTable
+end
 local programFunctions = {
 	dir = function(...)
-               
+		local path = bios.getDir()
+		if bios.getDrive() ~= "C" then
+			local a = splitString(path,"[^/]")
+			a = removeFirstIndex(a)
+			path = "\\"
+			for i,v in pairs(a) do
+				path = path..v.."\\"
+			end
+		else
+			path = string.gsub(path,"/","\\")
+		end
+        print("Directory of  "..bios.getDrive()..":"..path)
 		for i,v in pairs(fs.list(bios.getDir())) do
 			if string.sub(v, 1, 1) ~= "." then
-				print("    "..v)
+				if bios.getDir() == "/" and (v:gmatch("disk".."[1-9]+")() ~= nil or v:gmatch("disk")() ~= nil) then
+					--skip
+				else
+					if fs.isDir(bios.getDir()..v) then
+						v = v.."  <DIR>"
+					end
+					print("    "..v)
+				end
 			end
 		end
 	end,
@@ -82,20 +122,50 @@ local programFunctions = {
 		end
 	end,
 	help = function(...)
-		print("    DIR: Lists files on disk")
-		print("    TYPE: Outputs contents of a file")
-		print("    COPY: Duplicates a file")
-		print("    RENAME: Renames a file")
-		print("    ERASE: Deletes a file")
-		print("    HELP: Displays this message")
+		for i,v in pairs(help) do
+			print("    "..v)
+		end
 	end,
-	["a:"] = function()
-		bios.setDir("/disk/")
-		bios.setDrive("A")
+	mkdir = function(newDir)
+		if bios.getDir() == "/" and string.sub(newDir,1,4) == "disk" and (string.len(newDir) == 5 or string.len(newDir) == 6) then
+			return
+		end
+		if not fs.exists(bios.getDir()..newDir.."/") then
+				fs.makeDir(bios.getDir()..newDir.."/")
+		else
+			print("Direcotry already exists!")
+		end
 	end,
-	["b:"] = function()
-		bios.setDir("/disk2/")
-		bios.setDrive("B")
+	cd = function(newDir)
+		if bios.getDir() == "/" and string.sub(newDir,1,4) == "disk" and (string.len(newDir) == 5 or string.len(newDir) == 6) then
+			print("Invalid directory!") --Use the commands like a normal person
+			return
+		end
+		if newDir == ".." then
+			local newDir = "/"
+			local split = splitString(bios.getDir(),"[^/]")
+			if #split == 0 or (#split == 1 and (split[1]:gmatch("disk".."[1-9]+")() ~= nil or split[1]:gmatch("disk")() ~= nil)) then
+				print("Invalid directory!")
+				return
+			else
+				for i,v in pairs(split) do
+					if i ~= #split then
+						newDir = newDir..v.."/"
+					end
+				end
+				bios.setDir(newDir)
+			end
+		else
+			if bios.getDir() == "/" and (newDir:gmatch("disk".."[1-9]+")() ~= nil or newDir:gmatch("disk")() ~= nil) then
+				print("Invalid directory!")
+			else
+				if fs.exists(bios.getDir()..newDir.."/") then
+					bios.setDir(bios.getDir()..newDir.."/")
+				else
+					print("Invalid directory!")
+				end
+			end
+		end
 	end,
 	["c:"] = function()
 		bios.setDir("/")
@@ -104,28 +174,87 @@ local programFunctions = {
 	["update-file"] = function(file,url)
 		bios.updateFile(file,url)
 	end,
+	ver = function(...)
+		print("    "..versionString)
+	end	
 }
-function splitString(str,toMatch)
-	if not toMatch then
-		toMatch = "%S"
-	end
-	local words = {}
-	for w in str:gmatch(toMatch.."+") do
-		table.insert(words,w)
-	end
-	return words
-end
-local function removeFirstIndex(t)
-	local newTable = {}
-	for i,v in pairs(t) do
-		if i ~= 1 then
-			table.insert(newTable,v)
-		end
-	end
-	return newTable
-end
+
 local runBatch = nil
-local function interpret(command)
+local alphabet = { 
+	["a"] = "",
+	["b"] = "2",
+	["d"] = "3",
+	["e"] = "4",
+	["f"] = "5",
+	["g"] = "6",
+	["h"] = "7",
+	["i"] = "8",
+	["j"] = "9",
+	["k"] = "10",
+	["l"] = "11",
+	["m"] = "12",
+	["n"] = "13",
+	["o"] = "14",
+	["p"] = "15",
+	["q"] = "16",
+	["r"] = "17",
+	["s"] = "18",
+	["t"] = "19",
+	["u"] = "20",
+	["v"] = "21",
+	["w"] = "22",
+	["x"] = "23",
+	["y"] = "24",
+	["z"] = "25",
+}
+for i,v in pairs(alphabet) do
+	programFunctions[i..":"] = function()
+		bios.setDir("/disk"..v.."/")
+		bios.setDrive(string.upper(i))
+	end
+end
+local interpret = nil
+local fakeApis = nil
+fakeApis = {
+	dos = {
+		version = function() return version end,
+		isSentient = function() return true end,
+	},
+	shell = { --bare minimum to get some programs to run, more functions to be added when i feel like it
+		run = function(...)
+			local args = {...}
+			local command = ""
+			for i,v in args do
+				if type(v) == "string" then
+					if i ~= 1 then
+						command = command.." "
+					end
+					command = command..v
+				end
+			end
+			interpret(command)
+		end,
+		execute = function(...) return fakeApis["shell"]["run"](...) end,
+		exit = function(...) return end,
+		dir = bios.getDir,
+		setDir = programFunctions["cd"],
+		path = function() return ".:/rom/programs:/rom/programs/http" end,
+		setPath = function(...) return end,
+		resolve = function(path)
+			local program = path
+			local name = splitString(path,"%P")
+			if romPrograms[string.lower(path)] then
+				program = romPrograms[string.lower(path)]
+			elseif path[2] or not fs.exists(bios.getDir()..path..".lua") then
+				program = bios.getDir()..path
+			else
+				program = bios.getDir()..path..".lua"
+			end
+			return program
+		end,
+	}
+}
+function interpret(command)
 	--local command = string.lower(command)
 	if command == "" then return end
 	local program = ""
@@ -178,7 +307,7 @@ end)
 term.setCursorBlink(true)
 while true do
 	term.setTextColor(colors.white)
-	term.write(bios.getDrive()..":") --DOS 1.25 used a ":" not a "\>"
+	term.write(bios.getDrive()..">") --DOS 3.30 used a ">" not a "\>"
 	local command = read()
 	local success, err = pcall(interpret,command)
 	if not success then

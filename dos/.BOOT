@@ -15,7 +15,7 @@ end
 
 
 -- #### Vars
-local hiddenPrograms = {"rom", "disk", "startup.lua", ".BOOT",".settings"}
+local hiddenPrograms = {"rom", "startup.lua", ".BOOT",".settings"}
 local fake = {}
 local real = {}
 
@@ -84,12 +84,11 @@ local function fakeList(path)
 		if list[i] == "startup" then
 			table.remove(list, i)
 		end
-	end
-	for i=1,#list do
-		if list[i] == userStartupPath then
-			list[i] = "startup"
+		if bios.getDir() == "/" and string.sub(path,1,4) == "disk" and (string.len(path) == 5 or string.len(path) == 6) then
+			table.remove(list, i)
+			return
 		end
-	end	
+	end
 	return list
 end
 _G.fs.list = fakeList
@@ -125,7 +124,7 @@ local fakeDelete = function(path)
 	end	
 	return real.delete(path)
 end
-_G.fs.makeDir = function(...) return end
+--_G.fs.makeDir = function(...) return end
 --_G.fs.isDir = function(...) return false end
 
 
@@ -134,19 +133,22 @@ local function fakeOpen(path, mode)
 	if string.lower(path) == "command.com" then
 		return nil
 	end	
+	if shouldBeHidden(path) == true then
+		return nil
+	end
 	return real.open(path, mode)
 end
 _G.fs.open = fakeOpen
 
 real.isReadOnly = fs.isReadOnly
 local function fakeIsReadOnly(path)
-	if shouldBeHidden(path) == true then
-		return nil
+	if string.sub(string.lower(path),1,5) == "/rom/" then
+		return true
 	end
 	if string.lower(path) == "command.com" then
 		return true
 	end
-	return real.isReadOnly(path)
+	return false--real.isReadOnly(path)
 end
 _G.fs.isReadOnly = fakeIsReadOnly
 
@@ -182,16 +184,8 @@ local function fakeCopy(fromPath, toPath)
 end
 _G.fs.copy = fakeCopy
 
---modify the env
-shell.setDir(path)
-shell.dir = function(...) return path end
-shell.openTab = nil
-shell.switchTab = nil
-
-
-
 if real.exists(bios.getBootedDrive().."COMMAND.COM") then
-	local success, response = pcall(os.run,{['shell']=shell},bios.getBootedDrive().."COMMAND.COM")
+	local success, response = pcall(os.run,{},bios.getBootedDrive().."COMMAND.COM")
 	if not success then
 		while true do os.sleep() end
 	end
@@ -200,6 +194,6 @@ else
 		print("Bad or missing Command Interpretor\nEnter correct name of Command Interpreter (eg, /COMMAND.COM)")
 		term.write(bios.getDrive().."> ")
 		local thing = read()
-		local success, response = pcall(os.run,{['shell']=shell},thing)
+		local success, response = pcall(os.run,{},thing)
 	end
 end
