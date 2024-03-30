@@ -8,8 +8,8 @@ erase .BOOT
 erase COMMAND.COM
 erase autoexec.bat
 erase startup.lua
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/master/bios.lua startup.lua
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/master/dos/.BOOT .BOOT
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/master/dos/COMMAND.COM COMMAND.COM
-wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/master/dos/autoexec.bat autoexec.bat
+wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/bios.lua startup.lua
+wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/.BOOT .BOOT
+wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/COMMAND.COM COMMAND.COM
+wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/autoexec.bat autoexec.bat
 reboot

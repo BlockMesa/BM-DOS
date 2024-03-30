@@ -1,4 +1,4 @@
-local baseUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/master/"
+local baseUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/"
 print("Installing BM-DOS")
 if not settings.get("dos.hasFinishedSetup") then
 	term.write("Install BM-DOS to this computer? Y/n: ")
