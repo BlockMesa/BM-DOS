@@ -5,6 +5,9 @@ if not settings.get("dos.hasFinishedSetup") then
 	local command = read()
 	if string.lower(command) == "y" then
 		shell.run("wget "..baseUrl.."bios.lua startup.lua")
+		shell.run("wget "..baseUrl.."dos/.BOOT .BOOT")
+		shell.run("wget "..baseUrl.."dos/COMMAND.COM COMMAND.COM")
+		shell.run("wget "..baseUrl.."dos/autoexec.bat autoexec.bat")
 
 		--setting the settings
 		settings.set("bios.use_multishell",false)
