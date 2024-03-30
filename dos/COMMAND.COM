@@ -93,10 +93,10 @@ local programFunctions = {
 	["c:"] = function()
 		bios.setDir("/")
 		bios.setDrive("C")
-	end
+	end,
 	["update-file"] = function(file,url)
 		bios.updateFile(file,url)
-	end
+	end,
 }
 function splitString(str,toMatch)
 	if not toMatch then
