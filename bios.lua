@@ -2,6 +2,7 @@
 --Used for all Block Mesa bootable computers
 --inject code stolen from https://pastebin.com/yzfDMjwf
 local oldPull = os.pullEvent
+local oldRequire = _ENV.require
 _G.os.pullEvent = os.pullEventRaw
 _G.os.pullEventOld = oldPull
 --internal flag things
@@ -20,7 +21,11 @@ local function setColors()
 	term.setPaletteColour(colors.orange, whiteColor)
 	term.setPaletteColour(colors.lime, whiteColor)
 	term.setPaletteColour(colors.green, whiteColor)
+	term.setPaletteColour(colors.blue, whiteColor)
+	term.setPaletteColour(colors.cyan, whiteColor)
+
 	term.setPaletteColour(colors.black, blackColor)
+	term.setPaletteColour(colors.gray, blackColor)
 	term.setBackgroundColor(colors.black)
 	term.setTextColor(colors.white)
 end
@@ -74,6 +79,7 @@ _G.bios = {
 		a1.close()
 		result.close()
 	end,
+	require = oldRequire,
 	fixColorScheme = setColors,
 }
 local function boot(prefix)

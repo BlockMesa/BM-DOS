@@ -11,7 +11,9 @@ _G.os.version = function() return versionString end
 local romPrograms = {
 	edit = "/rom/programs/edit.lua",
 	pastebin = "/rom/programs/http/pastebin.lua",
-	wget = "/rom/programs/http/wget.lua"
+	wget = "/rom/programs/http/wget.lua",
+	import = "/rom/programs/import.lua",
+	lua = "/rom/programs/lua.lua",
 }
 local help = {
 	"DIR: Lists files in directory",
@@ -95,15 +97,9 @@ local programFunctions = {
 			print("FILE NOT FOUND")
 		end
 	end,
-	echo = function(...)
-		print(...)
-	end,
-	shutdown = function(...)
-		os.shutdown()
-	end,
-	reboot = function(...)
-		os.reboot()
-	end,
+	echo = print,
+	shutdown = os.shutdown,
+	reboot = os.reboot,
 	rename = function(file,destination) --also works as move lol
 		local file = bios.getDir()..file
 		local destination = bios.getDir()..destination
@@ -252,7 +248,8 @@ fakeApis = {
 			end
 			return program
 		end,
-	}
+	},
+	require = bios.require
 }
 function interpret(command)
 	--local command = string.lower(command)
