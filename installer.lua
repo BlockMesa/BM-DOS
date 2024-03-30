@@ -1,7 +1,7 @@
 local baseUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/"
 print("Installing BM-DOS")
 if not settings.get("dos.hasFinishedSetup") then
-	term.write("Install BM-DOS to this computer? Y/n: ")
+	term.write("Install BM-DOS to this computer? y/N: ")
 	local command = read()
 	if string.lower(command) == "y" then
 		shell.run("wget "..baseUrl.."bios.lua startup.lua")
@@ -18,7 +18,7 @@ if not settings.get("dos.hasFinishedSetup") then
 end
 if fs.exists("/disk") then
 	local diskName = peripheral.getName(peripheral.find("drive"))
-	term.write("Make boot disk? Y/n: ")
+	term.write("Make boot disk? n/Y: ")
 	local command = read()
 	if string.lower(command) == "y" then
 		shell.run("wget "..baseUrl.."dos/.BOOT disk/.BOOT")
