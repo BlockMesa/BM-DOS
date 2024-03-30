@@ -6,7 +6,7 @@ echo To update those, run bootdisk.bat!
 pause
 erase .BOOT
 erase COMMAND.COM
-erase autoexec.bat
+rem erase autoexec.bat
 erase startup.lua
 wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/bios.lua startup.lua
 wget https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/.BOOT .BOOT
