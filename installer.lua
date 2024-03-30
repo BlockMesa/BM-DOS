@@ -24,7 +24,7 @@ if fs.exists("/disk") then
 		shell.run("wget "..baseUrl.."dos/.BOOT disk/.BOOT")
 		shell.run("wget "..baseUrl.."dos/COMMAND.COM disk/COMMAND.COM")
 		shell.run("wget "..baseUrl.."dos/autoexec.bat disk/autoexec.bat")
-		disk.setLabel(diskName, "BM-DOS v1.10")
+		disk.setLabel(diskName, "BM-DOS Boot Disk")
 	end
 end
 
