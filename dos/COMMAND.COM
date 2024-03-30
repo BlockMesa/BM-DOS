@@ -175,7 +175,7 @@ end)
 term.setCursorBlink(true)
 while true do
 	term.setTextColor(colors.white)
-	term.write(bios.getDrive()..":")
+	term.write(bios.getDrive()..":\>")
 	local command = read()
 	local success, err = pcall(interpret,command)
 	if not success then
