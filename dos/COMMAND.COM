@@ -145,7 +145,9 @@ local function interpret(command)
 		for i,v in pairs(fakeApis) do
 			fakeGlobals[i] = v
 		end
+		_G.os.pullEvent = os.pullEventOld
 		local success, response = pcall(os.run,fakeGlobals,program,table.unpack(args))
+		_G.os.pullEvent = os.pullEventRaw
 		if not success then
 			print("Illegal command: "..command..".")
 		end
