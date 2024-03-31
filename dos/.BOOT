@@ -1,3 +1,12 @@
+--DOS specific code that used to live in the BIOS
+local driveLetter = (bios.getBootedDrive() == "/") and "C" or "A"
+_ENV.bios.getDrive = function()
+	return driveLetter
+end
+_ENV.bios.setDrive = function(a)
+	driveLetter = a
+end
+
 bios.protect("/.boot")
 bios.protect(bios.getBootedDrive()..".boot")
 term.clear()
@@ -8,6 +17,7 @@ if not fs.find(bios.getBootedDrive()) then
 	print("ERROR LOADING BOOT DEVICE!") --how does this happen
 	while true do os.sleep() end
 end
+--translate old settings into new settings
 if bios.settingsGet("dos.secureboot") then
 	bios.settingsSet("bm-bios.secureboot",true)
 	bios.settingsSet("dos.secureboot",false)

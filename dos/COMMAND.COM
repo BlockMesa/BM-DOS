@@ -3,9 +3,10 @@
 --be reapplied every update.
 local version = "3.30"
 local versionString = "BM-DOS version "..version
+bios.fixColorScheme()
 term.clear()
 term.setCursorPos(1,1)
-term.write(versionString)
+print(versionString)
 term.setCursorPos(1,3)
 
 --modify the env
