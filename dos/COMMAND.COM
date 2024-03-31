@@ -9,25 +9,8 @@ term.write(versionString)
 term.setCursorPos(1,3)
 
 --modify the env
-local oldSettingsGet = settings.get
-local oldSettingsSet = settings.set
-_G.settings.set = function(key,newKey)
-	key = string.lower(key)
-	newKey = string.lower(newKey)
-	if key == "dos.passphrase" or key == "dos.secureboot" then
-		error("Permissions error!")
-	else
-		return oldSettingsSet(key,newKey)
-	end
-end
-_G.settings.get = function(key)
-	key = string.lower(key)
-	if key == "dos.passphrase" or key == "dos.secureboot" then
-		error("Permissions error!")
-	else
-		return oldSettingsGet(key)
-	end
-end
+local oldSettingsGet = bios.settingsGet
+local oldSettingsSet = bios.settingsSet
 _G.os.version = function() return versionString end
 
 local romPrograms = {
@@ -67,7 +50,7 @@ local function removeFirstIndex(t)
 	return newTable
 end
 bios.protect("/command.com")
-bios.protect("/.boot")
+bios.protect(bios.getBootedDrive().."command.com")
 local programFunctions
 programFunctions = {
 	dir = function(...)

@@ -3,8 +3,13 @@
 --inject code stolen from https://pastebin.com/yzfDMjwf
 local oldPull = os.pullEvent
 local oldRequire = _ENV.require
+local oldSettingsGet = settings.get
+local oldSettingsSet = settings.set
+local fsOpen = fs.open
+local oldDebug = _G.debug
 _G.os.pullEvent = os.pullEventRaw
 _G.os.pullEventOld = oldPull
+
 --internal flag things
 local version = "1.20"
 local isDiskBooted = false
@@ -72,10 +77,10 @@ setupTerm()
 local function enterSetup()
 	--For a future update
 end
-if not settings.get("dos.hasFinishedSetup") then
-	settings.set("bios.use_multishell",false)
-	settings.set("shell.allow_disk_startup",false)
-	settings.set("dos.hasFinishedSetup",true)
+if not oldSettingsGet("dos.hasFinishedSetup") then
+	oldSettingsSet("bios.use_multishell",false)
+	oldSettingsSet("shell.allow_disk_startup",false)
+	oldSettingsSet("dos.hasFinishedSetup",true)
 	settings.save()
 	print("Rebooting...")
 	os.reboot()
@@ -89,9 +94,11 @@ local notAllowed = {
 	["/startup"] = true,
 	["/startup.lua/"] = true,
 	["/startup/"] = true,
+	["/.settings"] = true,
+	["/.settings/"] = true,
 }
-local fsOpen = fs.open --it's not using io :skull:
-_G.bios = {
+local updateUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/"
+local bios = {
 	getBootedDrive = function()
 		return baseDirectory
 	end,
@@ -112,6 +119,10 @@ _G.bios = {
 		driveLetter = a
 	end,
 	updateFile = function(file,url)
+		if oldSettingsGet("dos.secureboot") and string.sub(url,1,56) ~= updateUrl then
+			print("Trust check failed")
+			return
+		end
 		local result, reason = http.get({url = url, binary = true}) --make names better
 		if not result then
 			print(("Failed to update %s from %s (%s)"):format(file, url, reason)) --include more detail
@@ -129,12 +140,14 @@ _G.bios = {
 	require = oldRequire,
 	fixColorScheme = setColors,
 	resolvePath = resolvePath,
+	settingsGet = oldSettingsGet,
+	settingsSet = oldSettingsSet,
 }
 local function boot(prefix)
 	print("Booting from drive "..driveLetter)
 	baseDirectory = prefix
 	directory = prefix
-	local success, response = pcall(os.run,{},prefix..".BOOT")
+	local success, response = pcall(os.run,{bios=bios},prefix..".BOOT")
 	if not success then
 		print(response)
 		while true do os.sleep() end
@@ -154,7 +167,41 @@ local function findBootableDevice()
 		while true do os.sleep() end
 	end
 end
-local function fsOverides()
+local function overides()
+	--misc overides
+	_G.debug = {
+		getinfo = function(...) end,
+		getlocal = function(...) end,
+	}
+	_G.settings.set = function(key,newKey)
+		key = string.lower(key)
+		newKey = string.lower(newKey)
+		if key == "dos.passphrase" or key == "dos.secureboot" then
+			error("Permissions error!")
+		else
+			return oldSettingsSet(key,newKey)
+		end
+	end
+	_G.settings.get = function(key)
+		key = string.lower(key)
+		if key == "dos.passphrase" or key == "dos.secureboot" then
+			error("Permissions error!")
+		else
+			return oldSettingsGet(key)
+		end
+	end
+	_G.settings.save = function()
+		local t = {}
+		for i,v in pairs(settings.getNames()) do
+			t[v] = oldSettingsGet(v)
+		end
+		local new = textutils.serialise(t)
+		local a = fsOpen("/.settings","w")
+		a.write(new)
+		a.close()
+		return true
+	end
+
 	local oldFs = {}
 	local fakeFs ={}
 	local oldIo = {}
@@ -273,8 +320,8 @@ local function overwrite()
     _G.os.pullEvent = oldPull
     _G['rednet'] = nil
     setupTerm()
-	if settings.get("dos.secureboot") then
-		fsOverides()
+	if oldSettingsGet("dos.secureboot") then
+		overides()
 	end
 	local success, err = pcall(findBootableDevice)
 	if not success then
