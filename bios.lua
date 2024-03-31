@@ -167,11 +167,27 @@ local function findBootableDevice()
 		while true do os.sleep() end
 	end
 end
+local blankFunction = function(...) 
+	return
+end
 local function overides()
 	--misc overides
 	_G.debug = {
-		getinfo = function(...) end,
-		getlocal = function(...) end,
+		debug = blankFunction,
+		gethook = blankFunction,
+		getinfo = blankFunction,
+		getlocal = blankFunction,
+		getmetatable = blankFunction,
+		getregistry = blankFunction,
+		getupvalue = blankFunction,
+		getuservalue = blankFunction,
+		sethook = blankFunction,
+		setmetatable = blankFunction,
+		setupvalue = blankFunction,
+		setuservalue = blankFunction,
+		traceback = blankFunction,
+		upvalueid = blankFunction,
+		upvaluejoin = blankFunction
 	}
 	_G.settings.set = function(key,newKey)
 		key = string.lower(key)
