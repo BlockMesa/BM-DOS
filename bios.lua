@@ -29,6 +29,37 @@ local function setColors()
 	term.setBackgroundColor(colors.black)
 	term.setTextColor(colors.white)
 end
+local function resolvePath(path)
+    local matches = {}
+    for i in path:gmatch("[^/]+") do
+        table.insert(matches,i)
+    end
+    local result1 = {}
+    local lastIndex = 1
+    for i,v in pairs(matches) do
+        if v ~= "." then
+            if v== ".." then
+                result1[lastIndex] = nil
+                lastIndex = lastIndex-1
+            else
+                lastIndex = lastIndex + 1
+                result1[lastIndex] = v
+            end
+        end
+    end
+    local result = {}
+    for i,v in pairs(result1) do
+        table.insert(result,v)
+    end
+    local final = "/"
+    for i,v in pairs(result) do
+        if i ~= 1 then
+            final = final .. "/"
+        end
+        final = final..v
+    end
+    return final
+end
 local function setupTerm()
 	term.redirect(term.native())
 	setColors()
@@ -47,6 +78,7 @@ if not settings.get("dos.hasFinishedSetup") then
 	os.reboot()
 end
 local fsOpen = fs.open --it's not using io :skull:
+local updateUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/"
 _G.bios = {
 	getBootedDrive = function()
 		return baseDirectory
@@ -69,18 +101,21 @@ _G.bios = {
 	end,
 	updateFile = function(file,url)
 		--a = http.get(url)
-		local result, reason = http.get({url = url, binary = true}) --make names better
-		if not result then
-			print(("Failed to update %s from %s (%s)"):format(file, url, reason)) --include more detail
-			return
+		if string.sub(url,1,56) == updateUrl then
+			local result, reason = http.get({url = url, binary = true}) --make names better
+			if not result then
+				print(("Failed to update %s from %s (%s)"):format(file, url, reason)) --include more detail
+				return
+			end
+			a1 = fsOpen(file,"wb")
+			a1.write(result.readAll())
+			a1.close()
+			result.close()
 		end
-		a1 = fsOpen(file,"wb")
-		a1.write(result.readAll())
-		a1.close()
-		result.close()
 	end,
 	require = oldRequire,
 	fixColorScheme = setColors,
+	resolvePath = resolvePath,
 }
 local function boot(prefix)
 	print("Booting from drive "..driveLetter)
@@ -106,15 +141,132 @@ local function findBootableDevice()
 		while true do os.sleep() end
 	end
 end
+local notAllowed = {
+	["/startup.lua"] = true,
+	["/startup"] = true,
+	["/startup.lua/"] = true,
+	["/startup/"] = true,
+}
+local function fsOverides()
+	local oldFs = {}
+	local fakeFs ={}
+	local oldIo = {}
+	local fakeIo = {}
+	--IO library
+	oldIo.open = io.open
+	function fakeIo.open(oldPath,a)
+		local path = resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldIo.open(path,a)
+	end
+	_G.io.open = fakeIo.open
+
+	oldIo.output = io.output
+	function fakeIo.output(oldPath)
+		if type(oldPath) == "string" then
+			local path = resolvePath(oldPath)
+			if notAllowed[string.lower(path)] then
+				return nil
+			end	
+			return oldIo.output(path)
+		end
+	end
+	_G.io.output = fakeIo.output
+
+	oldIo.input = io.input
+	function fakeIo.input(oldPath)
+		if type(oldPath) == "string" then
+			local path = resolvePath(oldPath)
+			if notAllowed[string.lower(path)] then
+				return nil
+			end	
+			return oldIo.input(path)
+		end
+	end
+	_G.io.input = fakeIo.input
+
+	oldIo.lines = io.lines
+	function fakeIo.lines(oldPath)
+		local path = resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldIo.lines(path)
+	end
+	_G.io.lines = fakeIo.lines
+
+	--FS library
+	oldFs.open = fs.open
+	function fakeFs.open(oldPath,a)
+		local path = resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldFs.open(path,a)
+	end
+	_G.fs.open = fakeFs.open
+
+	oldFs.delete = fs.delete
+	function fakeFs.delete(oldPath)
+		local path = resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldFs.delete(path)
+	end
+	_G.fs.delete = fakeFs.delete
+
+	oldFs.copy = fs.copy
+	function fakeFs.copy(oldPath,oldpath1)
+		local path = resolvePath(oldPath)
+		local path1 = resolvePath(oldPath1)
+		if notAllowed[string.lower(path)] or notAllowed[string.lower(path1)] then
+			return nil
+		end	
+		return oldFs.copy(path)
+	end
+	_G.fs.copy = fakeFs.copy
+
+	oldFs.move = fs.move
+	function fakeFs.move(oldPath,oldpath1)
+		local path = resolvePath(oldPath)
+		local path1 = resolvePath(oldPath1)
+		if notAllowed[string.lower(path)] or notAllowed[string.lower(path1)] then
+			return nil
+		end	
+		return oldFs.move(path)
+	end
+	_G.fs.move = fakeFs.move
+
+	oldFs.makeDir = fs.makeDir
+	function fakeFs.makeDir(oldPath)
+		local path = resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldFs.makeDir(path)
+	end
+	_G.fs.makeDir = fakeFs.makeDir
+
+	oldFs.exists = fs.exists
+	function fakeFs.exists(oldPath)
+		local path = resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return false
+		end	
+		return oldFs.exists(path)
+	end
+	_G.fs.exists = fakeFs.exists
+end
 local oldErr = printError
---local oldPull = os.pullEvent --has already been defined earlier
 local function overwrite()
     _G.printError = oldErr
     _G.os.pullEvent = oldPull
     _G['rednet'] = nil
-    --os.loadAPI("/rom/apis/rednet.lua")
     setupTerm()
-	--local success, err = pcall(parallel.waitForAny, boot, rednet.run)
+	fsOverides()
 	local success, err = pcall(findBootableDevice)
 	if not success then
 		print(err)

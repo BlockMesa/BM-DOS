@@ -25,6 +25,127 @@ local help = {
 	"ERASE: Deletes a file",
 	"HELP: Displays this message",
 }
+local function writeProtect()
+	local notAllowed = {
+		["/command.com"] = true,
+		["/.boot"] = true,
+		["/command.com/"] = true,
+		["/.boot/"] = true,
+	}
+	
+	local oldIo = {}
+	local fakeIo = {}
+	local oldFs = {}
+	local fakeFs = {}
+	--IO library
+	oldIo.open = io.open
+	function fakeIo.open(oldPath,a)
+		local path = bios.resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldIo.open(path,a)
+	end
+	_G.io.open = fakeIo.open
+
+	oldIo.output = io.output
+	function fakeIo.output(oldPath)
+		if type(oldPath) == "string" then
+			local path = bios.resolvePath(oldPath)
+			if notAllowed[string.lower(path)] then
+				return nil
+			end	
+			return oldIo.output(path)
+		end
+	end
+	_G.io.output = fakeIo.output
+
+	oldIo.input = io.input
+	function fakeIo.input(oldPath)
+		if type(oldPath) == "string" then
+			local path = bios.resolvePath(oldPath)
+			if notAllowed[string.lower(path)] then
+				return nil
+			end	
+			return oldIo.input(path)
+		end
+	end
+	_G.io.input = fakeIo.input
+
+	oldIo.lines = io.lines
+	function fakeIo.lines(oldPath)
+		local path = bios.resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldIo.lines(path)
+	end
+	_G.io.lines = fakeIo.lines
+
+	--FS library
+	oldFs.open = fs.open
+	function fakeFs.open(oldPath,a)
+		local path = bios.resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldFs.open(path,a)
+	end
+	_G.fs.open = fakeFs.open
+
+	oldFs.delete = fs.delete
+	function fakeFs.delete(oldPath)
+		local path = bios.resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldFs.delete(path)
+	end
+	_G.fs.delete = fakeFs.delete
+
+	oldFs.copy = fs.copy
+	function fakeFs.copy(oldPath,oldpath1)
+		local path = bios.resolvePath(oldPath)
+		local path1 = bios.resolvePath(oldPath1)
+		if notAllowed[string.lower(path)] or notAllowed[string.lower(path1)] then
+			return nil
+		end	
+		return oldFs.copy(path)
+	end
+	_G.fs.copy = fakeFs.copy
+
+	oldFs.move = fs.move
+	function fakeFs.move(oldPath,oldpath1)
+		local path = bios.resolvePath(oldPath)
+		local path1 = bios.resolvePath(oldPath1)
+		if notAllowed[string.lower(path)] or notAllowed[string.lower(path1)] then
+			return nil
+		end	
+		return oldFs.move(path)
+	end
+	_G.fs.move = fakeFs.move
+
+	oldFs.makeDir = fs.makeDir
+	function fakeFs.makeDir(oldPath)
+		local path = bios.resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return nil
+		end	
+		return oldFs.makeDir(path)
+	end
+	_G.fs.makeDir = fakeFs.makeDir
+	
+	oldFs.exists = fs.exists
+	function fakeFs.exists(oldPath)
+		local path = bios.resolvePath(oldPath)
+		if notAllowed[string.lower(path)] then
+			return false
+		end	
+		return oldFs.exists(path)
+	end
+	_G.fs.exists = fakeFs.exists
+end
+writeProtect()
 local function splitString(str,toMatch)
 	if not toMatch then
 		toMatch = "%S"
@@ -137,7 +258,18 @@ local programFunctions = {
 			print("Invalid directory!") --Use the commands like a normal person
 			return
 		end
-		if newDir == ".." then
+		local newDir = bios.resolvePath(bios.getDir()..newDir)
+		if newDir == "/" then
+			local sub = string.sub(bios.getDir(),1,6)
+			if sub == "/disk/" or sub:gmatch("/disk".."[1-9]+")() ~= nil then
+				print("Invalid directory!")
+				return
+			end
+		else
+			newDir = newDir.."/"
+		end
+		bios.setDir(newDir)
+		--[[if newDir == ".." then
 			local newDir = "/"
 			local split = splitString(bios.getDir(),"[^/]")
 			if #split == 0 or (#split == 1 and (split[1]:gmatch("disk".."[1-9]+")() ~= nil or split[1]:gmatch("disk")() ~= nil)) then
@@ -161,7 +293,7 @@ local programFunctions = {
 					print("Invalid directory!")
 				end
 			end
-		end
+		end]]
 	end,
 	["c:"] = function()
 		bios.setDir("/")
