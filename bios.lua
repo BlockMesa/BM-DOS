@@ -15,6 +15,7 @@ local driveLetter = "C"
 local whiteColor = 0x00FF00
 local blackColor = 0x000000
 local function setColors()
+	term.redirect(term.native())
 	term.setPaletteColour(colors.white, whiteColor)
 	term.setPaletteColour(colors.red, whiteColor)
 	term.setPaletteColour(colors.yellow, whiteColor)
@@ -61,7 +62,6 @@ local function resolvePath(path)
     return final
 end
 local function setupTerm()
-	term.redirect(term.native())
 	setColors()
 	term.setCursorBlink(false)
 	term.clear()
@@ -69,6 +69,9 @@ local function setupTerm()
 	print("BLOCK MESA BIOS v"..version)
 end
 setupTerm()
+local function enterSetup()
+	--For a future update
+end
 if not settings.get("dos.hasFinishedSetup") then
 	settings.set("bios.use_multishell",false)
 	settings.set("shell.allow_disk_startup",false)
@@ -77,8 +80,17 @@ if not settings.get("dos.hasFinishedSetup") then
 	print("Rebooting...")
 	os.reboot()
 end
+local bootIntoSetup = settings.get("dos.bootToSetup")
+if bootIntoSetup == nil or bootIntoSetup then
+	enterSetup()
+end
+local notAllowed = {
+	["/startup.lua"] = true,
+	["/startup"] = true,
+	["/startup.lua/"] = true,
+	["/startup/"] = true,
+}
 local fsOpen = fs.open --it's not using io :skull:
-local updateUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/"
 _G.bios = {
 	getBootedDrive = function()
 		return baseDirectory
@@ -100,18 +112,19 @@ _G.bios = {
 		driveLetter = a
 	end,
 	updateFile = function(file,url)
-		--a = http.get(url)
-		if string.sub(url,1,56) == updateUrl then
-			local result, reason = http.get({url = url, binary = true}) --make names better
-			if not result then
-				print(("Failed to update %s from %s (%s)"):format(file, url, reason)) --include more detail
-				return
-			end
-			a1 = fsOpen(file,"wb")
-			a1.write(result.readAll())
-			a1.close()
-			result.close()
+		local result, reason = http.get({url = url, binary = true}) --make names better
+		if not result then
+			print(("Failed to update %s from %s (%s)"):format(file, url, reason)) --include more detail
+			return
 		end
+		a1 = fsOpen(file,"wb")
+		a1.write(result.readAll())
+		a1.close()
+		result.close()
+	end,
+	protect = function(path)
+		notAllowed[path] = true
+		return
 	end,
 	require = oldRequire,
 	fixColorScheme = setColors,
@@ -141,12 +154,6 @@ local function findBootableDevice()
 		while true do os.sleep() end
 	end
 end
-local notAllowed = {
-	["/startup.lua"] = true,
-	["/startup"] = true,
-	["/startup.lua/"] = true,
-	["/startup/"] = true,
-}
 local function fsOverides()
 	local oldFs = {}
 	local fakeFs ={}
@@ -266,7 +273,9 @@ local function overwrite()
     _G.os.pullEvent = oldPull
     _G['rednet'] = nil
     setupTerm()
-	fsOverides()
+	if settings.get("dos.secureboot") then
+		fsOverides()
+	end
 	local success, err = pcall(findBootableDevice)
 	if not success then
 		print(err)

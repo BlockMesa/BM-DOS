@@ -1,3 +1,4 @@
+rem Obselete! Newest version has a command
 echo BM-DOS UNINSTALLER!
 echo This does NOT reset the settings file!
 echo To fix that, delete .settings!

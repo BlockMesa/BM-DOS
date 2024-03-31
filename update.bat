@@ -1,5 +1,5 @@
-rem This can't be used to install to a new computer because the BIOS is needed to boot
-rem You *could* add bios.lua to the bootdisk but theres no point
+rem Obselete!
+rem A new update could render this unusable!
 echo BM-DOS UPDATER!
 echo This does NOT update bootdisks!
 echo To update those, run bootdisk.bat!

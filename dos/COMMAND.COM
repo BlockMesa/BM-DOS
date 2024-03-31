@@ -1,3 +1,6 @@
+--WARNING: All code edited here will be overwriten
+--after every update. Modifications need to
+--be reapplied every update.
 local version = "3.30"
 local versionString = "BM-DOS version "..version
 term.clear()
@@ -6,6 +9,25 @@ term.write(versionString)
 term.setCursorPos(1,3)
 
 --modify the env
+local oldSettingsGet = settings.get
+local oldSettingsSet = settings.set
+_G.settings.set = function(key,newKey)
+	key = string.lower(key)
+	newKey = string.lower(newKey)
+	if key == "dos.passphrase" or key == "dos.secureboot" then
+		error("Permissions error!")
+	else
+		return oldSettingsSet(key,newKey)
+	end
+end
+_G.settings.get = function(key)
+	key = string.lower(key)
+	if key == "dos.passphrase" or key == "dos.secureboot" then
+		error("Permissions error!")
+	else
+		return oldSettingsGet(key)
+	end
+end
 _G.os.version = function() return versionString end
 
 local romPrograms = {
@@ -25,127 +47,6 @@ local help = {
 	"ERASE: Deletes a file",
 	"HELP: Displays this message",
 }
-local function writeProtect()
-	local notAllowed = {
-		["/command.com"] = true,
-		["/.boot"] = true,
-		["/command.com/"] = true,
-		["/.boot/"] = true,
-	}
-	
-	local oldIo = {}
-	local fakeIo = {}
-	local oldFs = {}
-	local fakeFs = {}
-	--IO library
-	oldIo.open = io.open
-	function fakeIo.open(oldPath,a)
-		local path = bios.resolvePath(oldPath)
-		if notAllowed[string.lower(path)] then
-			return nil
-		end	
-		return oldIo.open(path,a)
-	end
-	_G.io.open = fakeIo.open
-
-	oldIo.output = io.output
-	function fakeIo.output(oldPath)
-		if type(oldPath) == "string" then
-			local path = bios.resolvePath(oldPath)
-			if notAllowed[string.lower(path)] then
-				return nil
-			end	
-			return oldIo.output(path)
-		end
-	end
-	_G.io.output = fakeIo.output
-
-	oldIo.input = io.input
-	function fakeIo.input(oldPath)
-		if type(oldPath) == "string" then
-			local path = bios.resolvePath(oldPath)
-			if notAllowed[string.lower(path)] then
-				return nil
-			end	
-			return oldIo.input(path)
-		end
-	end
-	_G.io.input = fakeIo.input
-
-	oldIo.lines = io.lines
-	function fakeIo.lines(oldPath)
-		local path = bios.resolvePath(oldPath)
-		if notAllowed[string.lower(path)] then
-			return nil
-		end	
-		return oldIo.lines(path)
-	end
-	_G.io.lines = fakeIo.lines
-
-	--FS library
-	oldFs.open = fs.open
-	function fakeFs.open(oldPath,a)
-		local path = bios.resolvePath(oldPath)
-		if notAllowed[string.lower(path)] then
-			return nil
-		end	
-		return oldFs.open(path,a)
-	end
-	_G.fs.open = fakeFs.open
-
-	oldFs.delete = fs.delete
-	function fakeFs.delete(oldPath)
-		local path = bios.resolvePath(oldPath)
-		if notAllowed[string.lower(path)] then
-			return nil
-		end	
-		return oldFs.delete(path)
-	end
-	_G.fs.delete = fakeFs.delete
-
-	oldFs.copy = fs.copy
-	function fakeFs.copy(oldPath,oldpath1)
-		local path = bios.resolvePath(oldPath)
-		local path1 = bios.resolvePath(oldPath1)
-		if notAllowed[string.lower(path)] or notAllowed[string.lower(path1)] then
-			return nil
-		end	
-		return oldFs.copy(path)
-	end
-	_G.fs.copy = fakeFs.copy
-
-	oldFs.move = fs.move
-	function fakeFs.move(oldPath,oldpath1)
-		local path = bios.resolvePath(oldPath)
-		local path1 = bios.resolvePath(oldPath1)
-		if notAllowed[string.lower(path)] or notAllowed[string.lower(path1)] then
-			return nil
-		end	
-		return oldFs.move(path)
-	end
-	_G.fs.move = fakeFs.move
-
-	oldFs.makeDir = fs.makeDir
-	function fakeFs.makeDir(oldPath)
-		local path = bios.resolvePath(oldPath)
-		if notAllowed[string.lower(path)] then
-			return nil
-		end	
-		return oldFs.makeDir(path)
-	end
-	_G.fs.makeDir = fakeFs.makeDir
-	
-	oldFs.exists = fs.exists
-	function fakeFs.exists(oldPath)
-		local path = bios.resolvePath(oldPath)
-		if notAllowed[string.lower(path)] then
-			return false
-		end	
-		return oldFs.exists(path)
-	end
-	_G.fs.exists = fakeFs.exists
-end
-writeProtect()
 local function splitString(str,toMatch)
 	if not toMatch then
 		toMatch = "%S"
@@ -165,7 +66,10 @@ local function removeFirstIndex(t)
 	end
 	return newTable
 end
-local programFunctions = {
+bios.protect("/command.com")
+bios.protect("/.boot")
+local programFunctions
+programFunctions = {
 	dir = function(...)
 		local path = bios.getDir()
 		if bios.getDrive() ~= "C" then
@@ -181,7 +85,7 @@ local programFunctions = {
         print("Directory of  "..bios.getDrive()..":"..path)
 		for i,v in pairs(fs.list(bios.getDir())) do
 			if string.sub(v, 1, 1) ~= "." then
-				if bios.getDir() == "/" and (v:gmatch("disk".."[1-9]+")() ~= nil or v:gmatch("disk")() ~= nil) then
+				if bios.getDir() == "/" and ((v:gmatch("disk".."[1-9]+")() ~= nil or v:gmatch("disk")() ~= nil) or v == "startup.lua" or v == "rom") then
 					--skip
 				else
 					if fs.isDir(bios.getDir()..v) then
@@ -269,31 +173,6 @@ local programFunctions = {
 			newDir = newDir.."/"
 		end
 		bios.setDir(newDir)
-		--[[if newDir == ".." then
-			local newDir = "/"
-			local split = splitString(bios.getDir(),"[^/]")
-			if #split == 0 or (#split == 1 and (split[1]:gmatch("disk".."[1-9]+")() ~= nil or split[1]:gmatch("disk")() ~= nil)) then
-				print("Invalid directory!")
-				return
-			else
-				for i,v in pairs(split) do
-					if i ~= #split then
-						newDir = newDir..v.."/"
-					end
-				end
-				bios.setDir(newDir)
-			end
-		else
-			if bios.getDir() == "/" and (newDir:gmatch("disk".."[1-9]+")() ~= nil or newDir:gmatch("disk")() ~= nil) then
-				print("Invalid directory!")
-			else
-				if fs.exists(bios.getDir()..newDir.."/") then
-					bios.setDir(bios.getDir()..newDir.."/")
-				else
-					print("Invalid directory!")
-				end
-			end
-		end]]
 	end,
 	["c:"] = function()
 		bios.setDir("/")
@@ -304,7 +183,63 @@ local programFunctions = {
 	end,
 	ver = function(...)
 		print("    "..versionString)
-	end	
+	end,
+	uninstall = function()
+		print("Uninstalling BM-DOS")
+		bios.updateFile("startup.lua","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
+		bios.updateFile(".BOOT","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
+		bios.updateFile("COMMAND.COM","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
+		os.reboot()
+	end,
+	update = function()
+		print("Updating BM-DOS")
+		bios.updateFile("startup.lua","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/bios.lua")
+		bios.updateFile(".BOOT","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/.BOOT")
+		bios.updateFile("COMMAND.COM","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/COMMAND.COM")
+		os.reboot()
+	end,
+	secureboot = function(status)
+		if status == nil then
+			print("	Secure boot is"..(oldSettingsGet("dos.secureboot") and "on" or "off"))
+			return
+		else
+			local status = (status == "on")
+			if status then
+				if not oldSettingsGet("dos.passphrase") then
+					print("Secureboot pin not found!")
+					print("Please enter a pin:")
+					write(">")
+					while true do
+						local pass = read("*")
+						if pass ~= "" then
+							oldSettingsSet("dos.passphrase",pass)
+							break
+						end
+					end
+				end
+			elseif oldSettingsGet("dos.passphrase") then
+				local passphrase = oldSettingsGet("dos.passphrase")
+				print("Please enter your pin to continue")
+				write(">")
+				while true do
+					local pass = read("*")
+					if passphrase == pass then
+						oldSettingsSet("dos.passphrase",false)
+						break
+					end
+				end
+			end
+			oldSettingsSet("dos.secureboot",status)
+			settings.save()
+			print("Secure boot set to "..(status and "on" or "off"))
+			programFunctions["pause"]()
+			os.reboot()
+		end
+	end,
+	clr = function()
+		term.setCursorPos(1,1)
+		term.clear()
+	end,
 }
 
 local runBatch = nil
@@ -433,8 +368,8 @@ pcall(function()
 		runBatch("autoexec.bat")
 	end
 end)
-term.setCursorBlink(true)
 while true do
+	term.setCursorBlink(true)
 	term.setTextColor(colors.white)
 	term.write(bios.getDrive()..">") --DOS 3.30 used a ">" not a "\>"
 	local command = read()
