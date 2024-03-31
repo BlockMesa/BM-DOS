@@ -1,3 +1,4 @@
+--Outdated version! Please get the latest version from the dedicated repo!
 --BLOCK MESA BIOS
 --Used for all Block Mesa bootable computers
 --inject code stolen from https://pastebin.com/yzfDMjwf
@@ -11,7 +12,7 @@ _G.os.pullEvent = os.pullEventRaw
 _G.os.pullEventOld = oldPull
 
 --internal flag things
-local version = "1.20"
+local version = "1.30"
 local isDiskBooted = false
 local baseDirectory = ""
 local directory = "/"
@@ -77,15 +78,15 @@ setupTerm()
 local function enterSetup()
 	--For a future update
 end
-if not oldSettingsGet("dos.hasFinishedSetup") then
+if not oldSettingsGet("bm-bios.firstBoot") then
 	oldSettingsSet("bios.use_multishell",false)
 	oldSettingsSet("shell.allow_disk_startup",false)
-	oldSettingsSet("dos.hasFinishedSetup",true)
+	oldSettingsSet("bm-bios.firstBoot",true)
 	settings.save()
 	print("Rebooting...")
 	os.reboot()
 end
-local bootIntoSetup = settings.get("dos.bootToSetup")
+local bootIntoSetup = settings.get("bm-bios.bootToSetup")
 if bootIntoSetup == nil or bootIntoSetup then
 	enterSetup()
 end
@@ -97,6 +98,7 @@ local notAllowed = {
 	["/.settings"] = true,
 	["/.settings/"] = true,
 }
+local biosUrl = "https://raw.githubusercontent.com/BlockMesa/BM-BIOS/main/"
 local updateUrl = "https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/"
 local bios = {
 	getBootedDrive = function()
@@ -119,7 +121,7 @@ local bios = {
 		driveLetter = a
 	end,
 	updateFile = function(file,url)
-		if oldSettingsGet("dos.secureboot") and string.sub(url,1,56) ~= updateUrl then
+		if oldSettingsGet("bm-bios.secureboot") and (string.sub(url,1,56) ~= updateUrl and string.sub(url,1,57) ~= biosUrl) then
 			print("Trust check failed")
 			return
 		end
@@ -192,7 +194,7 @@ local function overides()
 	_G.settings.set = function(key,newKey)
 		key = string.lower(key)
 		newKey = string.lower(newKey)
-		if key == "dos.passphrase" or key == "dos.secureboot" then
+		if key == "bm-bios.passphrase" or key == "bm-bios.secureboot" then
 			error("Permissions error!")
 		else
 			return oldSettingsSet(key,newKey)
@@ -200,7 +202,7 @@ local function overides()
 	end
 	_G.settings.get = function(key)
 		key = string.lower(key)
-		if key == "dos.passphrase" or key == "dos.secureboot" then
+		if key == "bm-bios.passphrase" or key == "bm-bios.secureboot" then
 			error("Permissions error!")
 		else
 			return oldSettingsGet(key)
@@ -336,7 +338,7 @@ local function overwrite()
     _G.os.pullEvent = oldPull
     _G['rednet'] = nil
     setupTerm()
-	if oldSettingsGet("dos.secureboot") then
+	if oldSettingsGet("bm-bios.secureboot") then
 		overides()
 	end
 	local success, err = pcall(findBootableDevice)

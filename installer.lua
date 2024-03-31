@@ -4,7 +4,7 @@ if not settings.get("dos.hasFinishedSetup") then
 	term.write("Install BM-DOS to this computer? y/N: ")
 	local command = read()
 	if string.lower(command) == "y" then
-		shell.run("wget "..baseUrl.."bios.lua startup.lua")
+		shell.run("wget https://raw.githubusercontent.com/BlockMesa/BM-BIOS/main/bios.lua startup.lua")
 		shell.run("wget "..baseUrl.."dos/.BOOT .BOOT")
 		shell.run("wget "..baseUrl.."dos/COMMAND.COM COMMAND.COM")
 		shell.run("wget "..baseUrl.."dos/autoexec.bat autoexec.bat")

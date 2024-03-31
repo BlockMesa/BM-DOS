@@ -172,7 +172,7 @@ programFunctions = {
 		write("y/N: ")
 		local a = read()
 		if string.lower(a) == "y" then
-			if oldSettingsGet("dos.secureboot") then
+			if oldSettingsGet("bm-bios.secureboot") then
 				print("Please disable secureboot first.")
 				return
 			end
@@ -185,43 +185,43 @@ programFunctions = {
 	end,
 	update = function()
 		print("Updating BM-DOS")
-		bios.updateFile("startup.lua","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/bios.lua")
+		bios.updateFile("startup.lua","https://raw.githubusercontent.com/BlockMesa/BM-BIOS/main/bios.lua")
 		bios.updateFile(".BOOT","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/.BOOT")
 		bios.updateFile("COMMAND.COM","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/dos/COMMAND.COM")
 		os.reboot()
 	end,
 	secureboot = function(status)
 		if status == nil then
-			print("	Secure boot is"..(oldSettingsGet("dos.secureboot") and "on" or "off"))
+			print("	Secure boot is"..(oldSettingsGet("bm-bios.secureboot") and "on" or "off"))
 			return
 		else
 			local status = (status == "on")
 			if status then
-				if not oldSettingsGet("dos.passphrase") then
+				if not oldSettingsGet("bm-bios.passphrase") then
 					print("Secureboot pin not found!")
 					print("Please enter a pin:")
 					write(">")
 					while true do
 						local pass = read("*")
 						if pass ~= "" then
-							oldSettingsSet("dos.passphrase",pass)
+							oldSettingsSet("bm-bios.passphrase",pass)
 							break
 						end
 					end
 				end
-			elseif oldSettingsGet("dos.passphrase") then
-				local passphrase = oldSettingsGet("dos.passphrase")
+			elseif oldSettingsGet("bm-bios.passphrase") then
+				local passphrase = oldSettingsGet("bm-bios.passphrase")
 				print("Please enter your pin to continue")
 				write(">")
 				while true do
 					local pass = read("*")
 					if passphrase == pass then
-						oldSettingsSet("dos.passphrase",false)
+						oldSettingsSet("bm-bios.passphrase",false)
 						break
 					end
 				end
 			end
-			oldSettingsSet("dos.secureboot",status)
+			oldSettingsSet("bm-bios.secureboot",status)
 			settings.save()
 			print("Secure boot set to "..(status and "on" or "off"))
 			programFunctions["pause"]()

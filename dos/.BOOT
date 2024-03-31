@@ -8,7 +8,14 @@ if not fs.find(bios.getBootedDrive()) then
 	print("ERROR LOADING BOOT DEVICE!") --how does this happen
 	while true do os.sleep() end
 end
-
+if bios.settingsGet("dos.secureboot") then
+	bios.settingsSet("bm-bios.secureboot",true)
+	bios.settingsSet("dos.secureboot",false)
+	bios.settingsSet("bm-bios.passphrase",bios.settingsGet("dos.passphrase"))
+	bios.settingsSet("dos.passphrase",false)
+	settings.save()
+	os.reboot()
+end
 if fs.exists(bios.getBootedDrive().."COMMAND.COM") then
 	local success, response = pcall(os.run,{bios=bios},bios.getBootedDrive().."COMMAND.COM")
 	if not success then
