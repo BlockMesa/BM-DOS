@@ -185,11 +185,20 @@ programFunctions = {
 		print("    "..versionString)
 	end,
 	uninstall = function()
-		print("Uninstalling BM-DOS")
-		bios.updateFile("startup.lua","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
-		bios.updateFile(".BOOT","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
-		bios.updateFile("COMMAND.COM","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
-		os.reboot()
+		print("ARE YOU SURE?")
+		write("y/N: ")
+		local a = read()
+		if string.lower(a) == "y" then
+			if oldSettingsGet("dos.secureboot") then
+				print("Please disable secureboot first.")
+				return
+			end
+			print("Uninstalling BM-DOS")
+			bios.updateFile("startup.lua","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
+			bios.updateFile(".BOOT","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
+			bios.updateFile("COMMAND.COM","https://raw.githubusercontent.com/BlockMesa/BM-DOS/main/blank.lua")
+			os.reboot()
+		end
 	end,
 	update = function()
 		print("Updating BM-DOS")
