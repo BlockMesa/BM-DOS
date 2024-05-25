@@ -13,7 +13,7 @@ term.clear()
 term.setCursorPos(1,1)
 term.write("Starting BM-DOS...")
 term.setCursorPos(1,3)
-if not fs.find(bios.getBootedDrive()) then
+if not fs.exists(bios.getBootedDrive()) then
 	print("ERROR LOADING BOOT DEVICE!") --how does this happen
 	while true do os.sleep() end
 end
